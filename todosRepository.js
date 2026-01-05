@@ -1,0 +1,37 @@
+import db from "../db.js";
+
+const getTodosByUser = (userId) => {
+  return db.prepare(`
+    SELECT 
+      id,
+      title,
+      content,
+      tags,
+      due_date,
+      created_at,
+      updated_at
+    FROM todos
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+  `).all(userId);
+};
+
+
+const createTodo = (userId, title, content, tags, dueDate) => {
+  db.prepare(`
+    INSERT INTO todos (user_id, title, content, tags, due_date)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(
+    userId,
+    title,
+    content,
+    JSON.stringify(tags),
+    dueDate || null
+  );
+};
+
+export function deleteTodo(id, userId) {
+  return db
+    .prepare("DELETE FROM todos WHERE id = ? AND user_id = ?")
+    .run(id, userId);
+}

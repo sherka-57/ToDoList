@@ -24,6 +24,105 @@ body {
     box-shadow: 0 4px 18px rgba(106,17,203,0.12);
     z-index: 60;
 }
+
+/* Search box placed at left side of the navbar */
+.nav-search {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 320px;
+  max-width: 44%;
+}
+
+.nav-search input#navSearch {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.nav-search input::placeholder { color: rgba(255,255,255,0.82); }
+
+@media (max-width: 880px) {
+  .nav-search { display: none; }
+}
+
+.navbar-user {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+.user-icon {
+  height: 50%;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+#userArea {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-popup {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #1f1f2e;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  z-index: 1000;
+}
+
+.user-popup button {
+  width: 100%;
+  max-width: 160px;            /* keeps it compact */
+  text-align: center;
+}
+.user-popup button {
+  padding: 8px 12px;           /* tighter vertical spacing */
+}
+
+
+
+.user-popup.hidden {
+  display: none;
+}
+
+.user-email {
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  color: #333;
+  word-break: break-all;
+}
+
+#logoutBtn {
+  width: 100%;
+  padding: 6px;
+  border: none;
+  background: #e74c3c;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#logoutBtn:hover {
+  background: #c0392b;
+}
+
+
 /* Page Title styling */
 #PageTitle {
     color: white;
@@ -106,6 +205,7 @@ button {
     margin: 5px;
     border-radius: 5px;
     color: green;
+    cursor: pointer;
 }
 
 button:hover {
@@ -183,4 +283,248 @@ button:hover {
     .top-left, .top-right { padding: 12px; min-height: 120px; }
     .note-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
     .note { min-height: 120px; }
+}
+
+/* ============================
+   Profile / Login Popup 
+   ============================ */
+
+/* Container anchored to navbar */
+.profile-container {
+    position: absolute;
+    top: 16px;
+    right: 24px;
+    z-index: 120;
+    display: flex;
+    align-items: center;
+}
+
+/* Profile icon button */
+.profile-btn {
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 999px;
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    cursor: pointer;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 140ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.profile-btn:hover {
+    background: rgba(255,255,255,0.26);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+
+/* Login popup panel */
+.login-popup {
+    position: absolute;
+    top: 46px;
+    right: 0;
+    width: 240px;
+    padding: 14px 14px 16px 14px;
+    background: rgba(30, 18, 52, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Popup title */
+.login-popup h3 {
+    margin: 6px 0 8px 0;
+    font-size: 16px;
+    color: #ffffff;
+    text-align: center;
+}
+
+/* Inputs inside popup */
+.login-popup input {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.95);
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* Login submit button */
+.login-popup button#loginSubmit {
+    margin-top: 6px;
+    padding: 7px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #4caf50;
+    border: none;
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, transform 120ms ease;
+}
+
+.login-popup button#loginSubmit:hover {
+    background: #4caf50;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Close (X) button */
+.login-popup .close-btn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    padding: 4px;
+}
+
+.login-popup .close-btn:hover {
+    color: white;
+}
+
+
+.login-popup {
+  position: fixed;
+  z-index: 200;
+}
+
+.login-popup * {
+  pointer-events: auto;
+}
+
+
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* === Navbar user area === */
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: absolute;
+  right: 20px;
+  top: 14px;
+}
+
+.user-email {
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.user-icon {
+  cursor: pointer;
+}
+
+/* Account popup (reuse login popup look) */
+.user-popup {
+  position: absolute;
+  top: 56px;
+  right: 20px;
+  background: #1e1e2f;
+  padding: 14px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  z-index: 1000;
+}
+
+.user-popup button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+button.danger {
+  background: #e53935;
+  border: none;
+  color: white;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button.danger:hover {
+  background: #c62828;
+}
+
+.secondary-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    margin-top: 8px;
+}
+
+.secondary-btn:hover {
+    background: rgba(255,255,255,0.22);
+}
+
+#openRegister,
+#registerSubmit {
+  cursor: pointer;
+}
+
+.auth-mode {
+  display: flex;
+  gap: 8px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-mode button {
+  flex: 1;
+}
+
+#userIcon {
+  font-size: 28px;       /* ← increase size */
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 20px;
+}
+#userIcon:hover {
+  transform: scale(1.5);
+}
+#userEmail {
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding-right: 30px;
+}
+#userEmail:hover {
+  transform: scale(1.1);
+}
+
+.note-date {
+  font-size: 12px;
+  color: #777;
+  margin-top: 6px;
+}
+
+.due-date-label {
+  color: lightgreen;
+  font-weight: 500;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }

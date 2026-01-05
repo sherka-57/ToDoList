@@ -15,16 +15,20 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    overflow: visible;
+    height: 320px;
 }
 
 .note-card {
     position: relative;
     width: 100%;
-    transition: transform 0.6s;
+    height: 100%;
+    transition: transform 0.6s ease;
     transform-style: preserve-3d;
     /* allow the card to grow and provide more body space */
     flex: 1 1 auto;
     min-height: 260px;
+
 }
 
 .note.flipped .note-card {
@@ -38,40 +42,74 @@
     position: absolute;
     inset: 0;
     border-radius: 10px;
+    width: 100%;
     box-sizing: border-box;
     background: #fafafa;
     border: 1px solid rgba(0,0,0,0.04);
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 100%;
+    height: 100%;
 }
 
-.note-front { padding: 0; }
+.note-front {
+  display: flex;
+  padding: 0;
+  flex-direction: column;
+
+}
+
 
 .note-back {
     transform: rotateY(180deg);
+    overflow-y: auto;
 }
+
 
 .note-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    gap: 8px;
-    background: #4caf50;
-    color: #fff;
-    padding: 8px 12px;
-    box-sizing: border-box;
+  background: #4caf50;   /* ORIGINAL green */
+  color: white;
+  /* slightly reduce right padding so actions sit closer to the card edge */
+  padding: 8px 6px;
+  border-radius: 8px 8px 0 0;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.note-header .remove-note {
-    background: rgba(255,255,255,0.18);
-    color: #fff;
-    border: none;
-    padding: 4px 7px;
-    border-radius: 6px;
-    cursor: pointer;
+.note-header .note-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-left: 5px;
 }
+
+.note-header-actions {
+  display: flex;
+  gap: 4px; /* reduced gap between buttons */
+  margin-left: 6px; /* small nudge so group appears slightly more to the right relative to the title */
+}
+
+.note-header-actions button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 4px 7px; /* slightly narrower so buttons are visually tighter */
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.note-header-actions button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.edit-note {
+    margin-right: -3px;
+}
+
+  
 
 .note-excerpt {
     padding: 12px;
@@ -130,7 +168,10 @@
 /* Place actions between the card body and the footer (tags are inside the front card) */
 .note-front .note-actions { order: 2; }
 
-.note-front .note-tags { order: 3; margin-top: auto; padding: 8px 12px 12px 12px; }
+.note-front .note-tags { order: 3; margin-top: auto; padding: 6px 12px 12px 12px; }
+
+/* ensure footer placed inside the front sits below tags/actions; tighten spacing */
+.note-front .note-footer { order: 4; margin-top: 2px; padding: 4px 8px; }
 
 .note-body {
     padding: 12px;
@@ -149,52 +190,62 @@
     max-height: 240px;
 }
 
-.note .note-tags {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap !important;
-    margin-left: 3px;
-    align-items: center;
-    padding: 8px 6px;
-    box-sizing: border-box;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-}
-
-.note .note-tags {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap !important;
-    margin-left: 3px;
-    align-items: center;
-    padding: 8px 6px;
-    box-sizing: border-box;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-}
-
-.note .note-tags span {
-    flex: 0 0 auto;
-    margin: 0 8px 0 0; /* add horizontal gap between tags */
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px; /* slightly more comfortable tag padding */
-    font-size: 12px;
-}
-
-.note .note-tags {
-    scrollbar-width: none; /* hide by default; show when .show-scroll is added */
-}
+/*
 .note .note-tags::-webkit-scrollbar { height: 0; }
 .note .note-tags::-webkit-scrollbar-track { background: transparent; }
 .note .note-tags::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 999px; }
 .note .note-tags.show-scroll { scrollbar-width: thin; }
 .note .note-tags.show-scroll::-webkit-scrollbar { height: 8px; }
+*/
+.note-tags::-webkit-scrollbar {
+  height: 6px;
+  top: -5px;
+}
+
+.note-tags::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+}
+
+
+.note-tags {
+  display: flex;
+  gap: 6px;
+  padding: 4px 5px; /* reduce overall vertical padding so scrollbar sits closer to footer */
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+
+  scrollbar-width: thin; /* Firefox */
+}
+
+.note-tags span {
+  background: #6a11cb;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: -8px;
+}
+
+.note-footer {
+  display: flex;
+  margin-top: 6px;
+  padding: 6px 10px;
+
+  font-size: 14px;
+  color: #002c46;
+
+  background: #57c7ff;
+  border-top: 2px solid rgba(0, 0, 0, 0.12);
+}
+
+.note.editing {
+  outline: 3px solid #ffd54f;
+  box-shadow: 0 0 20px rgba(255, 213, 79, 0.7);
+}
+
+.note.editing .note-card {
+  transform: scale(1.03);
+}

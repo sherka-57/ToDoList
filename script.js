@@ -6,63 +6,294 @@ const btnTag = document.getElementById("tagButton");
 const userTagInput = document.getElementById("tagField");
 const tempTags = document.getElementById("tempTags");
 const noteGrid = document.querySelector(".note-grid");
+
+
 const txtArea = document.getElementById("msg");
 const taskBtn = document.getElementById("nameButton");
 const taskInput = document.getElementById("nameField");
 const fullTags = document.getElementById('fullTags');
+
+
+const loginPopup = document.getElementById("loginPopup");
+const closeLogin = document.getElementById("closeLogin");
+const loginSubmit = document.getElementById("loginSubmit");
+
+const userArea = document.getElementById("userArea");
+const userIcon = document.getElementById("userIcon");
+const userPopup = document.getElementById("userPopup");
+const userEmailDiv = document.getElementById("userEmail");
+const logoutBtn = document.getElementById("logoutBtn");
+
+
+const showLoginBtn = document.getElementById("showLogin");
+const showRegisterBtn = document.getElementById("showRegister");
+
+const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
+
+const registerSubmit = document.getElementById("registerSubmit");
+const noteCreationSection = document.getElementById("noteCreationSection");
+const allTagsSection = document.getElementById("allTagsSection");
+
+const noteDateInput = document.getElementById("noteDate");
+
+
+
+
+
 // active filter tags (multi-select) - notes must contain ALL tags in this set to be shown
 const activeFilterTags = new Set();
+// current search query from navbar search input (used together with tag filters)
+let currentSearchQuery = '';
 let notesState = [];
+let editingNoteId = null;
+let editingNoteCard = null;
+
+
 const APP_STORAGE_KEY = 'todo_notes_v1';
 const TAG_FILTER_KEY = 'todo_active_filters_v1';
 
-// ---- Utilities: storage ----
-function saveNotes() {
+let isAuthenticated = false;
+let isLoggedIn = false;
+let guestNotes = [];
+
+loginPopup.addEventListener("click", e => e.stopPropagation());
+loginPopup.addEventListener("mousedown", e => e.stopPropagation());
+
+const API_BASE_URL = "http://localhost:3000/api/todos";
+
+// ================= API =================
+// Load user info on page load
+
+async function checkAuthAndUpdateUI() {
   try {
-    localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(notesState));
-  } catch (e) { /* storage might be full or blocked */ }
-}
-function loadNotes() {
-  try {
-    const raw = localStorage.getItem(APP_STORAGE_KEY);
-    notesState = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
-  } catch (e) {
-    notesState = [];
-  }
-}
-function saveFilters() {
-  try {
-    localStorage.setItem(TAG_FILTER_KEY, JSON.stringify([...activeFilterTags]));
-  } catch (e) {}
-}
-function loadFilters() {
-  try {
-    const raw = localStorage.getItem(TAG_FILTER_KEY);
-    const arr = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
-    activeFilterTags.clear();
-    arr.forEach(t => activeFilterTags.add(t));
-  } catch (e) {
-    activeFilterTags.clear();
+    const res = await fetch("/api/auth/me", { credentials: "include" });
+
+    if (!res.ok) throw new Error();
+
+    const user = await res.json();
+
+
+    await fetchTodos(); // ✅ THIS is what populates notes
+  } catch {
+    setLoggedOutUI();
   }
 }
 
-// === [Persistence Init] Load notes + filters early ===
-loadNotes();
-loadFilters();
+function setLoggedInUI(user) {
+  userIcon.classList.add("hidden");
+  userEmailDiv.classList.remove("hidden");
+  userEmailDiv.textContent = user.email;
+
+  // 🔓 show protected sections
+  if (noteCreationSection) noteCreationSection.classList.remove("hidden");
+  if (allTagsSection) allTagsSection.classList.remove("hidden");
+}
+
+function setLoggedOutUI() {
+  userIcon.classList.remove("hidden");
+  userEmailDiv.classList.add("hidden");
+  userEmailDiv.textContent = "";
+  userPopup.classList.add("hidden");
+
+  // 🔒 hide protected sections
+  if (noteCreationSection) noteCreationSection.classList.add("hidden");
+  if (allTagsSection) allTagsSection.classList.add("hidden");
+}
+
+function showLoginForm() {
+  loginForm.classList.remove("hidden");
+  registerForm.classList.add("hidden");
+}
+
+function showRegisterForm() {
+  registerForm.classList.remove("hidden");
+  loginForm.classList.add("hidden");
+}
+
+showLoginBtn.addEventListener("click", showLoginForm);
+showRegisterBtn.addEventListener("click", showRegisterForm);
+
+registerSubmit.addEventListener("click", async () => {
+  const email = document.getElementById("registerEmail").value;
+  const password = document.getElementById("registerPassword").value;
+
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  if (!res.ok) {
+    alert("Registration failed");
+    return;
+  }
+
+  // auto-login
+  const loginRes = await fetch("/api/auth/login", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  if (!loginRes.ok) {
+    alert("Registered, but login failed");
+    return;
+  }
+
+  const user = await loginRes.json();
+  loginPopup.classList.add("hidden");
+  setLoggedInUI(user);
+  await fetchTodos();
+});
+
+async function initAuth() {
+  const res = await fetch("/api/auth/me", { credentials: "include" });
+
+  if (res.ok) {
+    const user = await res.json();
+
+  }
+}
+
+initAuth();
+
+async function initApp() {
+  const res = await fetch("/api/auth/me", { credentials: "include" });
+
+  if (res.ok) {
+    const user = await res.json();
+    setLoggedInUI(user);
+    await fetchTodos();
+  } else {
+    setLoggedOutUI();
+    clearUserState();
+  }
+}
+
+// Fetch todos from backend API
+async function fetchTodos() {
+  const res = await fetch("http://localhost:3000/api/todos", { credentials: "include"});
+  if (res.status === 401) {
+    notesState = [];
+    return;
+  }
+  notesState = await res.json();
+  renderNotesFromState();
+}
+
+async function createTodo(todo) {
+  await fetch(API_BASE_URL, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(todo)
+  });
+  fetchTodos();
+}
+
+async function deleteTodo(id) {
+  await fetch(`${API_BASE_URL}/${id}`, { method: "DELETE" });
+  fetchTodos();
+}
+
+async function updateTodo(id, data) {
+  await fetch(`${API_BASE_URL}/${id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  exitEditMode();
+  fetchTodos();
+}
+
+
+function clearUserState() {
+  notesState = [];
+  if (noteGrid) noteGrid.innerHTML = "";
+}
+
+
+loginPopup.addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
+
 
 function updateNotesVisibility() {
   const notes = Array.from(document.querySelectorAll('.note'));
-  if (activeFilterTags.size === 0) {
-    notes.forEach(card => { card.style.display = ''; });
-    return;
-  }
+  const query = (currentSearchQuery || '').trim().toLowerCase();
   notes.forEach(card => {
-    const cardTagEls = Array.from(card.querySelectorAll('.note-tags span[data-tag]'));
-    const cardTagSet = new Set(cardTagEls.map(s => s.dataset.tag));
-    const matchesAll = Array.from(activeFilterTags).every(t => cardTagSet.has(t));
-    card.style.display = matchesAll ? '' : 'none';
+    // tags: note must contain all active filter tags (AND)
+    let tagsMatch = true;
+    if (activeFilterTags.size) {
+      const cardTagEls = Array.from(card.querySelectorAll('.note-tags span[data-tag]'));
+      const cardTagSet = new Set(cardTagEls.map(s => s.dataset.tag));
+      tagsMatch = Array.from(activeFilterTags).every(t => cardTagSet.has(t));
+    }
+
+    // search: match against note visible text (title, excerpt, tags, body)
+    let searchMatch = true;
+    if (query.length) {
+      const txt = (card.textContent || '').toLowerCase();
+      searchMatch = txt.indexOf(query) !== -1;
+    }
+
+    card.style.display = (tagsMatch && searchMatch) ? '' : 'none';
   });
 }
+
+
+if (loginSubmit) {
+  loginSubmit.addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    const res = await fetch("http://localhost:3000/api/auth/login", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+  if (res.ok) {
+    const user = await res.json();
+    loginPopup.classList.add("hidden");
+    setLoggedInUI(user);
+    await fetchTodos();
+  } else {
+      alert("Login failed");
+  }
+  });
+}
+
+userIcon.addEventListener("click", (e) => {
+  e.stopPropagation();
+  loginPopup.classList.toggle("hidden");
+  userPopup.classList.add("hidden");
+});
+
+userEmailDiv.addEventListener("click", (e) => {
+  e.stopPropagation();
+  userPopup.classList.toggle("hidden");
+  loginPopup.classList.add("hidden");
+});
+
+
+logoutBtn.addEventListener("click", async () => {
+  await fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "include"
+  });
+  window.location.reload();
+});
+
+
+// === [Tag Filter Handlers] ===
+
 function selectTagSpan(span) {
   if (!span || !span.dataset) return;
   const tag = span.dataset.tag;
@@ -174,42 +405,104 @@ function updateFullTagCount(text) {
   }
 }
 
+// Persist/restore active tag filters to localStorage so selections survive reloads
+function saveFilters() {
+  try {
+    const arr = Array.from(activeFilterTags);
+    localStorage.setItem(TAG_FILTER_KEY, JSON.stringify(arr));
+  } catch (e) { /* ignore storage errors */ }
+}
+
+function loadFilters() {
+  try {
+    const raw = localStorage.getItem(TAG_FILTER_KEY);
+    if (!raw) return;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return;
+    arr.forEach(t => activeFilterTags.add(t));
+  } catch (e) { /* ignore parse errors */ }
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function nl2br(str) {
+  if (!str) return "";
+  return str.replace(/\n/g, "<br>");
+}
+
+
 // === [Factory] Build a note card from saved data (structure preserved) ===
 function createNoteCardFromData(noteObj) {
-  // Reuse the same HTML your Task creation handler uses
-  // (keeping structure identical)
-  const escapeHtml = s => s.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
-  const nl2br = s => escapeHtml(s).replace(/\n/g, '<br>');
-  const EXCERPT_CHARS = 220;
-  const excerptText = noteObj.body.length > EXCERPT_CHARS
-    ? noteObj.body.slice(0, EXCERPT_CHARS).trim() + '…'
-    : noteObj.body;
+
+  const body =
+  noteObj.content ??
+  noteObj.body ??
+  noteObj.description ??
+  "";
+
+  const dueDate = noteObj.due_date;
+
+  function formatDate(d) {
+  if (!d) return "";
+    const [year, month, day] = d.split("-").map(Number);
+    return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}`;
+  }
+
+
+ 
+  const excerptText = body.length > 220 ? body.slice(0, 220) + "…" : body;
+
 
   const card = document.createElement("div");
   card.className = "note";
+  card.dataset.id = noteObj.id;
+
+
   card.innerHTML = `
-    <div class="note-card">
-      <div class="note-front">
-        <div class="note-header">${escapeHtml(noteObj.title)} <button class="remove-note">✖</button></div>
-        <div class="note-excerpt"><p>${nl2br(excerptText)}</p></div>
+  <div class="note-card">
+    <div class="note-front">
+      
+      <div class="note-header">
+        <span class="note-title">${escapeHtml(noteObj.title)}</span>
+        <div class="note-header-actions">
+          <button class="edit-note">✎</button>
+          <button class="remove-note">✖</button>
+        </div>
       </div>
-      <div class="note-back">
-        <div class="note-body"><p>${nl2br(noteObj.body)}</p></div>
-        <div class="note-actions"><button class="show-less">Close</button></div>
+
+      <div class="note-excerpt">
+        <p>${nl2br(excerptText)}</p>
       </div>
+
+      <div class="note-tags"></div>
+
+      <div class="note-footer">
+        ${noteObj.due_date ? `Due date: ${formatDate(noteObj.due_date)}` : "&nbsp;"}
+      </div>
+    </div> <!-- ✅ CLOSE note-front -->
+
+
+    <div class="note-back">
+      <div class="note-body"><p>${nl2br(body)}</p></div>
+      <div class="note-actions"><button class="show-less">Close</button></div>
     </div>
-    <div class="tags note-tags"></div>
-  `;
+  </div>
+`;
+
 
   // Insert the new card into the DOM first so tag counting sees it
   if (noteGrid) noteGrid.append(card);
 
-  // Move tags container into the front (bottom of front)
-  const noteTagContainer = card.querySelector('.note-tags');
-  const front = card.querySelector('.note-front');
-  if (noteTagContainer && front && noteTagContainer.parentElement !== front) {
-    front.appendChild(noteTagContainer);
-  }
+  const noteTagContainer = card.querySelector(".note-tags");
+
 
   // Build tag spans exactly like runtime creates
   noteObj.tags.forEach(text => {
@@ -217,12 +510,6 @@ function createNoteCardFromData(noteObj) {
     const span = document.createElement('span');
     span.dataset.tag = text;
     span.appendChild(document.createTextNode(text));
-
-    const b = document.createElement('button');
-    b.textContent = '✖';
-    b.classList.add('remove-tag');
-    b.addEventListener('click', () => removeTagAndFull(span));
-    span.appendChild(b);
 
     noteTagContainer.appendChild(span);
     updateFullTagCount(text);
@@ -246,14 +533,21 @@ function createNoteCardFromData(noteObj) {
   const showLessBtn = card.querySelector('.show-less');
   if (showLessBtn) showLessBtn.addEventListener('click', () => card.classList.remove('flipped'));
 
+  const editBtn = card.querySelector('.edit-note');
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      enterEditMode(noteObj, card);
+    });
+  }
+
+
   // Remove note button: remove tags, card, and persist
   const removeNoteBtn = card.querySelector('.remove-note');
   if (removeNoteBtn) {
     removeNoteBtn.addEventListener('click', () => {
-      const noteTagSpans = Array.from(card.querySelectorAll('.note-tags span'));
-      noteTagSpans.forEach(tagEl => removeTagAndFull(tagEl));
-      card.remove();
-      serializeNotesFromDOM(); // persist after removal
+      
+      const id = card.dataset.id;
+      deleteTodo(id);
     });
   }
 
@@ -265,6 +559,8 @@ function createNoteCardFromData(noteObj) {
   if (noteTagContainer) {
     if (noteTagContainer.scrollWidth > noteTagContainer.clientWidth + 1) noteTagContainer.classList.add('show-scroll'); else noteTagContainer.classList.remove('show-scroll');
   }
+
+
 
   // Respect any active filters after render
   updateNotesVisibility();
@@ -284,6 +580,52 @@ function createNoteCardFromData(noteObj) {
   return card;
 }
 
+function enterEditMode(note, card) {
+  // Exit previous edit
+  if (editingNoteCard) {
+    editingNoteCard.classList.remove('editing');
+  }
+
+  editingNoteId = note.id;
+  editingNoteCard = card;
+  card.classList.add('editing');
+
+  // Fill inputs
+  taskInput.value = note.title;
+  txtArea.value = note.content || '';
+  noteDateInput.value = note.due_date || '';
+
+  // Clear tempTags
+  tempTags.innerHTML = '';
+
+  // Move tags into tempTags
+  note.tags.forEach(tag => {
+    const span = document.createElement('span');
+    span.dataset.tag = tag;
+    span.textContent = tag;
+    span.appendChild(createRemoveButtonFor(span));
+    tempTags.appendChild(span);
+  });
+
+  // Scroll to creation panel
+  document.getElementById('noteCreationSection')
+    .scrollIntoView({ behavior: 'smooth' });
+}
+
+function exitEditMode() {
+  if (editingNoteCard) {
+    editingNoteCard.classList.remove('editing');
+  }
+
+  editingNoteId = null;
+  editingNoteCard = null;
+
+  taskInput.value = '';
+  txtArea.value = '';
+  noteDateInput.value = '';
+  tempTags.innerHTML = '';
+}
+
 // === [Serializer] Capture current DOM into notesState and save ===
 function serializeNotesFromDOM() {
   const cards = Array.from(document.querySelectorAll('.note'));
@@ -298,9 +640,9 @@ function serializeNotesFromDOM() {
     const bodyEl = card.querySelector('.note-back .note-body p');
     const body = bodyEl ? bodyEl.innerHTML.replace(/<br\s*\/?>/gi, '\n') : '';
     const tags = Array.from(card.querySelectorAll('.note-tags span[data-tag]')).map(s => s.dataset.tag);
-    return { title, body, tags };
+    return { title, body, tags};
   });
-  saveNotes(); // writes notesState to localStorage
+  
 }
 
 // === [Renderer] Build notes from saved state ===
@@ -312,7 +654,7 @@ function renderNotesFromState() {
   if (fullTags) fullTags.innerHTML = '';
 
   notesState.forEach(n => createNoteCardFromData(n));
-
+ 
   // Make All Tags entries clickable and reflect active-filter UI
   if (fullTags) {
     Array.from(fullTags.children).forEach(ch => {
@@ -356,6 +698,9 @@ if (btnTag) {
 // Task creation handler
 if (taskBtn) {
   taskBtn.addEventListener("click", () => {
+
+    const dueDate = noteDateInput?.value || null;
+
     if (!noteGrid || !tempTags || !txtArea || !taskInput) return;
     let taskName = (taskInput.value || '').trim();
     let taskDesc = (txtArea.value || '').trim();
@@ -370,21 +715,44 @@ if (taskBtn) {
     const excerptText = taskDesc.length > EXCERPT_CHARS ? taskDesc.slice(0, EXCERPT_CHARS).trim() + '…' : taskDesc;
     let card = document.createElement("div");
     card.className = "note";
+
+    // format due date for display (mm/dd/yyyy) when creating a new note
+    const formattedDue = dueDate ? (() => {
+      try {
+        const d = new Date(dueDate);
+        return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
+      } catch (e) { return '' }
+    })() : '';
+    
     card.innerHTML = `
-      <div class="note-card">
-        <div class="note-front">
-          <div class="note-header">${escapeHtml(taskName)} <button class="remove-note">✖</button></div>
-          <div class="note-excerpt"><p>${nl2br(excerptText)}</p></div>
-        </div>
-        <div class="note-back">
-          <div class="note-body"><p>${nl2br(taskDesc)}</p></div>
-          <div class="note-actions"><button class="show-less">Close</button></div>
-        </div>
+  <div class="note-card">
+    <div class="note-front">
+      <div class="note-header">
+        ${escapeHtml(taskName)}
+        <button class="remove-note">✖</button>
       </div>
+
+      <div class="note-excerpt">
+        <p>${nl2br(excerptText)}</p>
+      </div>
+
       <div class="tags note-tags"></div>
-    `;
-    // Insert the new card into the DOM first so tag counting sees it
-    noteGrid.append(card);
+
+      <div class="note-footer">
+        ${formattedDue ? `Due date: ${formattedDue}` : ""}
+      </div>
+
+    </div>
+
+    <div class="note-back">
+      <div class="note-body"><p>${nl2br(taskDesc)}</p></div>
+      <div class="note-actions"><button class="show-less">Close</button></div>
+    </div>
+  </div>
+`;
+
+   
+
     // Move all tags from the temp tag container into the new note's tag area
     const noteTagContainer = card.querySelector('.note-tags');
     // Ensure the note-tags container sits inside the front of the card (bottom of front)
@@ -399,17 +767,7 @@ if (taskBtn) {
       if (!text) return;
       // append the existing tag element into the note (this removes it from tempTags)
       noteTagContainer.appendChild(orig);
-      // ensure the tag's remove button removes the tag regardless of location
-      const btn = orig.querySelector('button.remove-tag');
-      if (btn) {
-        btn.onclick = () => removeTagAndFull(orig);
-      } else {
-        const b = document.createElement('button');
-        b.textContent = '✖';
-        b.classList.add('remove-tag');
-        b.addEventListener('click', () => removeTagAndFull(orig));
-        orig.appendChild(b);
-      }
+      
       // update the main tags list counts (will create or update the entry)
       updateFullTagCount(text);
     });
@@ -452,9 +810,9 @@ if (taskBtn) {
     if (removeNoteBtn) removeNoteBtn.addEventListener('click', () => {
       const noteTagSpans = Array.from(card.querySelectorAll('.note-tags span'));
       noteTagSpans.forEach(tagEl => removeTagAndFull(tagEl));
-      card.remove();
-      // Persist after removal
-      serializeNotesFromDOM();
+
+      const id = card.dataset.id;
+      deleteTodo(id);
     });
     // Wire show-less handler (close on back)
     const showLessBtn = card.querySelector('.show-less');
@@ -464,18 +822,47 @@ if (taskBtn) {
     // After wiring flip handlers, ensure excerpt clipping/fade state is correct
     // run for the new card
     updateClipForCard(card);
-    // apply active multi-tag filter to this newly created card so it respects the current selection
-    if (activeFilterTags.size) {
-      const cardTagEls = Array.from(card.querySelectorAll('.note-tags span[data-tag]'));
-      const cardTagSet = new Set(cardTagEls.map(s => s.dataset.tag));
-      const matchesAll = Array.from(activeFilterTags).every(t => cardTagSet.has(t));
-      card.style.display = matchesAll ? '' : 'none';
+    // apply active multi-tag + search filter to this newly created card so it respects the current selection
+    if (activeFilterTags.size || (currentSearchQuery || '').trim().length) {
+      const query = (currentSearchQuery || '').trim().toLowerCase();
+      let tagsMatch = true;
+      if (activeFilterTags.size) {
+        const cardTagEls = Array.from(card.querySelectorAll('.note-tags span[data-tag]'));
+        const cardTagSet = new Set(cardTagEls.map(s => s.dataset.tag));
+        tagsMatch = Array.from(activeFilterTags).every(t => cardTagSet.has(t));
+      }
+      let searchMatch = true;
+      if (query.length) {
+        const txt = (card.textContent || '').toLowerCase();
+        searchMatch = txt.indexOf(query) !== -1;
+      }
+      card.style.display = (tagsMatch && searchMatch) ? '' : 'none';
     }
     // also update on window resize
     window.addEventListener('resize', () => updateClipForCard(card));
 
-    // Persist notes after creation (serialize current DOM)
-    serializeNotesFromDOM();
+   
+    const tags = Array.from(card.querySelectorAll('.note-tags span[data-tag]')).map(s => s.dataset.tag);
+    
+    if (editingNoteId) {
+      updateTodo(editingNoteId, {
+        title: taskName,
+        content: taskDesc,
+        tags,
+        due_date: dueDate
+      });
+    } else {
+      createTodo({
+        title: taskName,
+        content: taskDesc,
+        tags,
+        due_date: dueDate
+      });
+    }
+
+
+
+    if (noteDateInput) noteDateInput.value = "";
 
     txtArea.value = "";
     taskInput.value = "";
@@ -484,6 +871,8 @@ if (taskBtn) {
 
 // Initialize flip/read-more handlers and clipping for existing notes on the page
 function initExistingNotes() {
+  // restore persisted filters before initializing UI
+  loadFilters();
   const notes = Array.from(document.querySelectorAll('.note'));
   notes.forEach(card => {
     // attach remove handler if present
@@ -492,9 +881,9 @@ function initExistingNotes() {
       removeNoteBtn.addEventListener('click', () => {
         const noteTagSpans = Array.from(card.querySelectorAll('.note-tags span'));
         noteTagSpans.forEach(tagEl => removeTagAndFull(tagEl));
-        card.remove();
-        // Persist after removal of an existing note
-        serializeNotesFromDOM();
+        
+        const id = card.dataset.id;
+        deleteTodo(id);
       });
       removeNoteBtn._attached = true;
     }
@@ -553,5 +942,35 @@ document.addEventListener('DOMContentLoaded', initExistingNotes);
 
 // Render notes from saved state on load (clears placeholders and rebuilds)
 document.addEventListener('DOMContentLoaded', () => {
-  renderNotesFromState();
+  checkAuthAndUpdateUI();
 });
+
+// Wire navbar search input after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  const search = document.getElementById('navSearch');
+  if (!search) return;
+  search.addEventListener('input', (e) => {
+    currentSearchQuery = e.target.value || '';
+    updateNotesVisibility();
+  });
+  search.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      search.value = '';
+      currentSearchQuery = '';
+      updateNotesVisibility();
+    }
+  });
+});
+
+
+document.addEventListener("click", () => {
+  loginPopup.classList.add("hidden");
+  userPopup.classList.add("hidden");
+});
+
+
+loginPopup.addEventListener("click", e => e.stopPropagation());
+userPopup.addEventListener("click", e => e.stopPropagation());
+
+
+initApp();
