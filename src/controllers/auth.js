@@ -1,65 +1,67 @@
+// controllers/auth.js
 import bcrypt from "bcrypt";
-import {
-  createUser,
-  findUserByEmail,
-  findUserById
-} from "../repositories/usersRepository.js";
+import { createUser, findUserByEmail, findUserById } from "../repositories/usersRepository.js";
 
+/**
+ * POST /login
+ */
 export async function login(req, res) {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
+    const user = await findUserByEmail(email);
 
-   console.log("LOGIN BODY:", req.body);
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  const user = findUserByEmail(email);
-  if (!user) {
-    return res.status(401).json({ error: "Invalid credentials" });
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    req.session.userId = user.id;
+    res.json({ id: user.id, email: user.email });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  const match = await bcrypt.compare(password, user.password_hash);
-  if (!match) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-
-  // ✅ THIS WAS MISSING
-  req.session.userId = user.id;
-
-  res.json({
-    id: user.id,
-    email: user.email
-  });
 }
 
-
-export function me(req, res) {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-
-  const user = findUserById(req.session.userId);
-  res.json({ email: user.email });
-
-}
-
-
-
+/**
+ * POST /register
+ */
 export async function register(req, res) {
-  console.log("REGISTER BODY:", req.body);
+  try {
+    const { email, password } = req.body;
 
-  const { email, password } = req.body;
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Missing fields" });
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await createUser(email, passwordHash);
+
+    req.session.userId = user.id;
+    res.status(201).json({ id: user.id, email: user.email });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
   }
+}
 
-  const existing = findUserByEmail(email);
-  if (existing) {
-    return res.status(409).json({ error: "User exists" });
+/**
+ * GET /me
+ */
+export async function me(req, res) {
+  try {
+    const userId = req.session.userId;
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+    const user = await findUserById(userId);
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  const hash = await bcrypt.hash(password, 10);
-  const user = createUser(email, hash);
-
-
-  req.session.userId = user.id;
-  res.status(201).json(user);
 }
