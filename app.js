@@ -1,69 +1,56 @@
-import express from 'express';
-import cors from 'cors';
-import todoRoutes from './routes/todos.js';
-import dotenv from 'dotenv';
-import session from 'express-session';
-import { findUserById } from './repositories/usersRepository.js';
-import authRoutes from './routes/auth.js';
+import express from "express";
+import dotenv from "dotenv";
+import session from "express-session";
 import path from "path";
 import { fileURLToPath } from "url";
+
+import todoRoutes from "./routes/todos.js";
+import authRoutes from "./routes/auth.js";
+import { findUserById } from "./repositories/usersRepository.js";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// middleware
+app.use(express.json());
+
 // serve frontend
-app.use(express.static(path.join(__dirname, "../../FrontEnd")));
-
-
-/* -------- MIDDLEWARE -------- */
-/*app.use(cors({
-  origin: true,
-  credentials: true
-}));
-*/
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.use(session({
   name: "sid",
-  secret: "dev-secret",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,   // REQUIRED for localhost
+    secure: process.env.NODE_ENV === "production",
   }
 }));
 
-
-app.use(express.json());
-
-
 app.use((req, res, next) => {
-  console.log(req.method, req.url);
-
   req.user = null;
-
   if (req.session?.userId) {
     req.user = findUserById(req.session.userId);
   }
-
   next();
 });
 
+// routes
+app.use("/api/auth", authRoutes);
+app.use("/api/todos", todoRoutes);
 
-app.use('/api/auth', authRoutes);
-/* -------- ROUTES -------- */
-app.get('/favicon.ico', (req, res) => res.status(204));
-app.use('/api/todos', todoRoutes);
+// SPA fallback
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
 
-/* -------- START SERVER -------- */
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
