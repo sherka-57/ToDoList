@@ -25,17 +25,19 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
 // Session setup
-app.use(session({
-  name: "sid",
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  }
-}));
+app.use(
+  session({
+    name: "sid",
+    secret: process.env.SESSION_SECRET || "replace_me",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production", // ⚠ only secure in prod (HTTPS)
+    },
+  })
+);
 
 // Hydrate user from session
 app.use(async (req, res, next) => {
@@ -65,5 +67,6 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
 
