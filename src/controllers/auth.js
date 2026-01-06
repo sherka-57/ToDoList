@@ -61,21 +61,6 @@ export async function login(req, res) {
   }
 }
 
-export async function testSupabase(req, res) {
-  try {
-    const { data, error } = await supabase.from("Users").select("*").limit(1);
-    if (error) {
-      console.error("Supabase test error:", error);
-      return res.status(500).json({ error: error.message });
-    }
-    res.json(data);
-  } catch (err) {
-    console.error("Unexpected Supabase error:", err);
-    res.status(500).json({ error: "Unexpected error" });
-  }
-}
-
-
 /**
  * Current user info
  */
@@ -87,6 +72,7 @@ export async function me(req, res) {
 
   res.json(user);
 }
+
 
 
 
