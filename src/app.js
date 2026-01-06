@@ -1,73 +1,35 @@
 import express from "express";
-import dotenv from "dotenv";
 import session from "express-session";
-import path from "path";
-import { fileURLToPath } from "url";
+import cors from "cors";
 
-import todoRoutes from "./routes/todos.js";
-import authRoutes from "./routes/auth.js";
-import { findUserById } from "./repositories/usersRepository.js";
-
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import * as todosController from "./controllers/todos.js";
+import * as authController from "./controllers/auth.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// ----------------------------
-// MIDDLEWARE
-// ----------------------------
+app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
-
-// Serve frontend static files
-app.use(express.static(path.join(__dirname, "../public")));
-
-// Session setup
-app.set('trust proxy', 1); // trust Render's reverse proxy
-
 app.use(session({
-  name: "sid",
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || "keyboard cat",
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-  }
+  cookie: { secure: false }
 }));
 
-// Hydrate user from session
-app.use(async (req, res, next) => {
-  req.user = null;
-  if (req.session?.userId) {
-    req.user = await findUserById(req.session.userId);
-  }
-  next();
-});
+// Auth routes
+app.post("/api/register", authController.register);
+app.post("/api/login", authController.login);
+app.post("/api/logout", authController.logout);
 
-// ----------------------------
-// API ROUTES
-// ----------------------------
-app.use("/api/auth", authRoutes);
-app.use("/api/todos", todoRoutes);
+// Todos routes
+app.get("/api/todos", todosController.getTodos);
+app.post("/api/todos", todosController.createTodo);
+app.delete("/api/todos/:id", todosController.deleteTodo);
+app.put("/api/todos/:id", todosController.updateTodo);
 
-// ----------------------------
-// SPA FALLBACK (Express 5 SAFE)
-// ----------------------------
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
+export default app;
 
-// ----------------------------
-// START SERVER
-// ----------------------------
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
 
 
 
