@@ -1,5 +1,5 @@
 // todosRepository.js
-import supabase from "../supabaseClient.js";
+import { supabase } from "../supabaseClient.js";
 
 /**
  * Get all todos for a user, ordered by created_at descending
@@ -70,4 +70,5 @@ export async function updateTodo(id, userId, updates) {
 
   if (error) throw error;
 }
+
 
