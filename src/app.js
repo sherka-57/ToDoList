@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // serve frontend
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.use(session({
   name: "sid",
@@ -57,4 +57,3 @@ app.get(/.*/, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
