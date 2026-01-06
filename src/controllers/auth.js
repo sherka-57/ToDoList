@@ -1,6 +1,21 @@
 // auth.js
 import bcrypt from "bcrypt";
 import { createUser, findUserByEmail, findUserById } from "../repositories/usersRepository.js";
+import supabase from "../supabaseClient.js"; // make sure path is correct
+
+export async function testSupabase(req, res) {
+  try {
+    const { data, error } = await supabase.from("Users").select("*").limit(1);
+    if (error) {
+      console.error("Supabase test error:", error);
+      return res.status(500).json({ error: error.message });
+    }
+    res.json(data);
+  } catch (err) {
+    console.error("Unexpected Supabase error:", err);
+    res.status(500).json({ error: "Unexpected error" });
+  }
+}
 
 /**
  * Register new user
@@ -72,6 +87,7 @@ export async function me(req, res) {
 
   res.json(user);
 }
+
 
 
 
