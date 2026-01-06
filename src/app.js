@@ -16,12 +16,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// middleware
+// ----------------------------
+// MIDDLEWARE
+// ----------------------------
 app.use(express.json());
 
-// serve frontend
+// Serve frontend static files
 app.use(express.static(path.join(__dirname, "../public")));
 
+// Session setup
 app.use(session({
   name: "sid",
   secret: process.env.SESSION_SECRET,
@@ -30,10 +33,11 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
   }
 }));
 
+// Hydrate user from session
 app.use(async (req, res, next) => {
   req.user = null;
   if (req.session?.userId) {
@@ -42,25 +46,24 @@ app.use(async (req, res, next) => {
   next();
 });
 
-
-// routes
+// ----------------------------
+// API ROUTES
+// ----------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
 
-// SPA fallback
-/*
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
-*/
+// ----------------------------
+// SPA FALLBACK (Express 5 SAFE)
+// ----------------------------
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
-
+// ----------------------------
+// START SERVER
+// ----------------------------
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
 
 
