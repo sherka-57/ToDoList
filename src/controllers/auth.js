@@ -1,7 +1,7 @@
 // auth.js
 import bcrypt from "bcrypt";
 import { createUser, findUserByEmail, findUserById } from "../repositories/usersRepository.js";
-import supabase from "../supabaseClient.js"; // make sure path is correct
+import { supabase } from "../supabaseClient.js"; // make sure path is correct
 
 export async function testSupabase(req, res) {
   try {
@@ -23,28 +23,30 @@ export async function testSupabase(req, res) {
 export async function register(req, res) {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
 
     const { data, error } = await supabase
-      .from("Users") // matches your table
+      .from('Users') // matches your table
       .insert({ email, password_hash: hashed })
       .select()
       .single();
 
     if (error) {
-      console.error("Supabase insert error:", error);
+      console.error('Supabase insert error:', error);
       return res.status(400).json({ error: error.message });
     }
 
-    // set session cookie
+    // set session
     req.session.userId = data.id;
 
     res.json({ id: data.id, email: data.email });
   } catch (err) {
-    console.error("Register error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error('Register error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 }
 
@@ -83,6 +85,7 @@ export async function me(req, res) {
 
   res.json(user);
 }
+
 
 
 
