@@ -158,7 +158,7 @@ async function initAuth() {
   }
 }
 
-//initAuth();
+initAuth();
 
 async function initApp() {
   const res = await fetch("/api/auth/me", { credentials: "include" });
@@ -982,4 +982,5 @@ userPopup.addEventListener("click", e => e.stopPropagation());
 
 
 initApp();
+
 
