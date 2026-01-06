@@ -60,7 +60,7 @@ let guestNotes = [];
 loginPopup.addEventListener("click", e => e.stopPropagation());
 loginPopup.addEventListener("mousedown", e => e.stopPropagation());
 
-const API_BASE_URL = "/api/todos";
+const apiUrl = "https://todolist-1-p5d8.onrender.com/api";
 
 
 // ================= API =================
@@ -158,7 +158,7 @@ async function initAuth() {
   }
 }
 
-initAuth();
+//initAuth();
 
 async function initApp() {
   const res = await fetch("/api/auth/me", { credentials: "include" });
@@ -172,49 +172,54 @@ async function initApp() {
     clearUserState();
   }
 }
-
-// Fetch todos from backend API
 async function fetchTodos() {
-  const res = await fetch("/api/todos", { credentials: "include" });
-  if (res.status === 401) {
-    notesState = []; // ensure it's an array
-    renderNotesFromState();
-    return;
-  }
-
-  const data = await res.json();
-  notesState = Array.isArray(data) ? data : [];
+  const res = await fetch(`${apiUrl}/todos`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to fetch todos");
+  const todos = await res.json();
+  notesState = todos.map(t => ({
+    id: t.id,
+    title: t.title,
+    content: t.content,
+    tags: t.tags || [],
+    due_date: t.due_date
+  }));
   renderNotesFromState();
 }
 
 
-async function createTodo(todo) {
-  await fetch(API_BASE_URL, {
+async function createTodo(title, content, tags = [], due_date = null) {
+  const res = await fetch(`${apiUrl}/todos`, {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(todo)
+    body: JSON.stringify({ title, content, tags, due_date }),
+    credentials: "include"
   });
-  fetchTodos();
+  if (!res.ok) throw new Error("Failed to create todo");
+  const todos = await res.json();
+  console.log("Todos after create:", todos);
+}
+
+async function updateTodo(id, updates) {
+  const res = await fetch(`${apiUrl}/todos/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to update todo");
+  const todos = await res.json();
+  console.log("Todos after update:", todos);
 }
 
 async function deleteTodo(id) {
-  await fetch(`${API_BASE_URL}/${id}`, { method: "DELETE" });
-  fetchTodos();
-}
-
-async function updateTodo(id, data) {
-  await fetch(`${API_BASE_URL}/${id}`, {
-    method: "PUT",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
+  const res = await fetch(`${apiUrl}/todos/${id}`, {
+    method: "DELETE",
+    credentials: "include"
   });
-
-  exitEditMode();
-  fetchTodos();
+  if (!res.ok) throw new Error("Failed to delete todo");
+  const todos = await res.json();
+  console.log("Todos after delete:", todos);
 }
-
 
 function clearUserState() {
   notesState = [];
@@ -250,7 +255,6 @@ function updateNotesVisibility() {
     card.style.display = (tagsMatch && searchMatch) ? '' : 'none';
   });
 }
-
 
 if (loginSubmit) {
   loginSubmit.addEventListener("click", async () => {
@@ -850,20 +854,18 @@ if (taskBtn) {
     const tags = Array.from(card.querySelectorAll('.note-tags span[data-tag]')).map(s => s.dataset.tag);
     
     if (editingNoteId) {
-      updateTodo(editingNoteId, {
-        title: taskName,
-        content: taskDesc,
-        tags,
-        due_date: dueDate
-      });
-    } else {
-      createTodo({
-        title: taskName,
-        content: taskDesc,
-        tags,
-        due_date: dueDate
-      });
-    }
+  await updateTodo(editingNoteId, {
+    title: taskName,
+    content: taskDesc,
+    tags,
+    due_date: dueDate
+  });
+} else {
+  await createTodo(taskName, taskDesc, tags, dueDate);
+}
+
+// After creating/updating, refresh notes from backend
+await fetchTodos();
 
 
 
@@ -980,3 +982,4 @@ userPopup.addEventListener("click", e => e.stopPropagation());
 
 
 initApp();
+
