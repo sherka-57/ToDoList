@@ -80,22 +80,34 @@ export async function login(req, res) {
 // ----------------------
 // GET CURRENT USER
 export async function me(req, res) {
-  try {
-    if (!req.session?.userId) return res.status(401).json({ error: "Not logged in" });
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
+  try {
     const { data: user, error } = await supabase
       .from("Users")
-      .select("*")
+      .select("id, email")
       .eq("id", req.session.userId)
-      .limit(1)
       .single();
 
-    if (error) return res.status(500).json({ error: "Failed to fetch user" });
-    return res.status(200).json({ id: user.id, email: user.email });
+    if (error || !user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    res.json(user);
   } catch (err) {
-    console.error("/me error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Server error" });
   }
 }
+
+export function logout(req, res) {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ error: "Failed to logout" });
+    res.clearCookie("connect.sid"); // optional: clear cookie
+    res.json({ ok: true });
+  });
+}
+
 
 
