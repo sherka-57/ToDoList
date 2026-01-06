@@ -5,7 +5,6 @@ const router = express.Router();
 
 router.post("/login", login);
 router.post("/register", register);
-router.get("/test", testSupabase);
 router.get("/me", me);
 
 router.post("/logout", (req, res) => {
