@@ -3,7 +3,7 @@ import {
   getTodosByUser,
   createTodo as createTodoRepo,
   deleteTodo as deleteTodoRepo,
-  updateTodo
+  updateTodo as updateTodoRepo
 } from "../repositories/todosRepository.js";
 
 /**
@@ -32,7 +32,7 @@ export async function createTodo(req, res) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const userId = req.session.userId;
-    
+
     const { title, content, tags, due_date } = req.body;
     const todoTags = Array.isArray(tags) ? tags : [];
     await createTodoRepo(userId, title, content, todoTags, due_date);
@@ -67,22 +67,25 @@ export async function deleteTodo(req, res) {
 
 /**
  * PUT /:id
- * Optional: Update fields like title, content, tags, due_date
+ * Update fields like title, content, tags, due_date
  */
-export async function updateTodoHandler(req, res) {
+export async function updateTodo(req, res) {
   try {
     if (!req.session || !req.session.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const userId = req.session.userId;
     const todoId = parseInt(req.params.id, 10);
+    const { title, content, tags, due_date } = req.body;
 
     const updates = {
-      ...req.body,
-      tags: Array.isArray(req.body.tags) ? req.body.tags : []
+      title,
+      content,
+      due_date,
+      tags: Array.isArray(tags) ? tags : []
     };
 
-    await updateTodo(todoId, userId, updates);
+    await updateTodoRepo(todoId, userId, updates);
 
     const todos = await getTodosByUser(userId);
     res.json(todos);
