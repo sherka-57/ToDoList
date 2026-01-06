@@ -2,49 +2,52 @@
 import bcrypt from "bcrypt";
 import supabase from "../supabaseClient.js";
 
-// POST /login
+// LOGIN
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
 
     const { data: user, error } = await supabase
-      .from("Users")
+      .from("Users") // capital U
       .select("*")
       .eq("email", email)
       .single();
 
-    if (error || !user) return res.status(401).json({ message: "Invalid credentials" });
+    if (error) {
+      if (error.code === "PGRST116") return res.status(401).json({ message: "Invalid credentials" });
+      throw error;
+    }
 
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) return res.status(401).json({ message: "Invalid credentials" });
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) return res.status(401).json({ message: "Invalid credentials" });
 
     req.session.userId = user.id;
-    res.json({ id: user.id, email: user.email });
+    return res.json({ id: user.id, email: user.email });
   } catch (err) {
-    console.error(err);
+    console.error("LOGIN ERROR:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 }
 
-// POST /register
+// REGISTER
 export async function register(req, res) {
   try {
     const { email, password } = req.body;
 
-    // check if user exists
-    const { data: existingUser, error: fetchError } = await supabase
+    // Check existing
+    const { data: existing } = await supabase
       .from("Users")
       .select("*")
       .eq("email", email)
       .single();
 
-    if (existingUser) return res.status(400).json({ message: "Email already registered" });
+    if (existing) return res.status(400).json({ message: "Email already registered" });
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, 10);
 
     const { data: user, error: insertError } = await supabase
       .from("Users")
-      .insert({ email, password_hash: passwordHash })
+      .insert({ email, password_hash })
       .select()
       .single();
 
@@ -53,12 +56,12 @@ export async function register(req, res) {
     req.session.userId = user.id;
     res.status(201).json({ id: user.id, email: user.email });
   } catch (err) {
-    console.error(err);
+    console.error("REGISTER ERROR:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 }
 
-// GET /me
+// ME
 export async function me(req, res) {
   try {
     if (!req.session?.userId) return res.status(401).json({ message: "Not authenticated" });
@@ -73,7 +76,7 @@ export async function me(req, res) {
 
     res.json(user);
   } catch (err) {
-    console.error(err);
+    console.error("ME ERROR:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 }
