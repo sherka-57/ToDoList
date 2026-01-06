@@ -1,4 +1,3 @@
-// controllers/todos.js
 import {
   getTodosByUser,
   createTodo as createTodoRepo,
@@ -67,7 +66,6 @@ export async function deleteTodo(req, res) {
 
 /**
  * PUT /:id
- * Update fields like title, content, tags, due_date
  */
 export async function updateTodo(req, res) {
   try {
@@ -94,4 +92,5 @@ export async function updateTodo(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
 
