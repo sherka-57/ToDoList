@@ -60,7 +60,8 @@ let guestNotes = [];
 loginPopup.addEventListener("click", e => e.stopPropagation());
 loginPopup.addEventListener("mousedown", e => e.stopPropagation());
 
-const API_BASE_URL = "http://localhost:3000/api/todos";
+const API_BASE_URL = "/api/todos";
+
 
 // ================= API =================
 // Load user info on page load
@@ -132,9 +133,9 @@ registerSubmit.addEventListener("click", async () => {
   // auto-login
   const loginRes = await fetch("/api/auth/login", {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
+    credentials: "include"
   });
 
   if (!loginRes.ok) {
@@ -174,7 +175,7 @@ async function initApp() {
 
 // Fetch todos from backend API
 async function fetchTodos() {
-  const res = await fetch("http://localhost:3000/api/todos", { credentials: "include"});
+  const res = await fetch("/api/todos", { credentials: "include"});
   if (res.status === 401) {
     notesState = [];
     return;
@@ -252,7 +253,7 @@ if (loginSubmit) {
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
-    const res = await fetch("http://localhost:3000/api/auth/login", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
