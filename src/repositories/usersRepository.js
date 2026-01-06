@@ -1,6 +1,6 @@
 // usersRepository.js
 import supabase from "../supabaseClient.js";
-import bcrypt from "bcrypt";
+
 
 /**
  * Create a new user
@@ -62,3 +62,4 @@ export async function findUserById(id) {
 
   return data;
 }
+
