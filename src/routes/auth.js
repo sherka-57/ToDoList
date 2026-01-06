@@ -1,9 +1,5 @@
 import express from "express";
-import { login, register, me } from "../controllers/auth.js"
 import { login, register, me, testSupabase } from "../controllers/auth.js";
-
-
-
 
 const router = express.Router();
 
