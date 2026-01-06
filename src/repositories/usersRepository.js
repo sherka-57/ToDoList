@@ -1,5 +1,5 @@
 // usersRepository.js
-import supabase from "../supabaseClient.js";
+import { supabase } from "../supabaseClient.js";
 import bcrypt from "bcrypt";
 
 /**
@@ -62,6 +62,7 @@ export async function findUserById(id) {
 
   return data;
 }
+
 
 
 
