@@ -1,6 +1,6 @@
 // controllers/auth.js
 import bcrypt from "bcrypt";
-import supabase from "../supabaseClient.js";
+import { supabase } from "../supabaseClient.js";
 
 // ----------------------
 // Helper to get user by email
@@ -97,4 +97,5 @@ export async function me(req, res) {
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
 
