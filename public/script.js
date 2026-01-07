@@ -40,6 +40,15 @@ const allTagsSection = document.getElementById("allTagsSection");
 const noteDateInput = document.getElementById("noteDate");
 const supabase = window.supabase;
 
+// In your main JS (index.js or script.js)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (let reg of registrations) {
+      reg.unregister();
+      console.log('Service worker unregistered:', reg);
+    }
+  });
+}
 
 
 //import { supabase } from "./supabaseClientBrowser.js";
@@ -938,6 +947,7 @@ userPopup.addEventListener("click", e => e.stopPropagation());
 document.addEventListener('DOMContentLoaded', () => {
   initExistingNotes();
 });
+
 
 
 
