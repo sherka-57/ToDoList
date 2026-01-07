@@ -1,4 +1,5 @@
 import { updateTodo as updateTodoRepo, getTodosByUser } from "../repositories/todosRepository.js";
+import { updateTodo } from "./repositories/repositories/todosRepository.js";
 
 export async function handler(event) {
   if (event.httpMethod !== "PUT") return { statusCode: 405, body: "Method Not Allowed" };
