@@ -1,5 +1,5 @@
 // usersRepository.js
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../supabaseServerClient.js";
 import bcrypt from "bcrypt";
 
 /**
