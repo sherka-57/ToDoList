@@ -39,7 +39,7 @@ const allTagsSection = document.getElementById("allTagsSection");
 
 const noteDateInput = document.getElementById("noteDate");
 
-
+import { supabase } from "../src/supabaseClient.js";
 
 
 
@@ -51,14 +51,6 @@ let notesState = [];
 let editingNoteId = null;
 let editingNoteCard = null;
 
-
-const APP_STORAGE_KEY = 'todo_notes_v1';
-const TAG_FILTER_KEY = 'todo_active_filters_v1';
-
-let isAuthenticated = false;
-let isLoggedIn = false;
-let guestNotes = [];
-
 loginPopup.addEventListener("click", e => e.stopPropagation());
 loginPopup.addEventListener("mousedown", e => e.stopPropagation());
 
@@ -69,23 +61,18 @@ const API_BASE_URL = "/.netlify/functions/todos";
 // Load user info on page load
 
 async function checkAuthAndUpdateUI() {
-  try {
-    const userId = localStorage.getItem("userId");
-const res = await fetch("/.netlify/functions/auth-me", {
-  headers: { "x-user-id": userId || "" }
-});
+  const { data: { user } } = await supabase.auth.getUser();
 
-
-    if (!res.ok) throw new Error();
-
-    const user = await res.json();
-
-
-    await fetchTodos(); // ✅ THIS is what populates notes
-  } catch {
+  if (!user) {
     setLoggedOutUI();
+    clearUserState();
+    return;
   }
+
+  setLoggedInUI(user);
+  await fetchTodos();
 }
+
 
 function setLoggedInUI(user) {
   userIcon.classList.add("hidden");
@@ -154,30 +141,6 @@ if (loginRes.ok) {
   setLoggedInUI(user);
   await fetchTodos();
 });
-
-async function initAuth() {
-  const res = await fetch("/api/auth/me", { credentials: "include" });
-
-  if (res.ok) {
-    const user = await res.json();
-
-  }
-}
-
-initAuth();
-
-async function initApp() {
-  const res = await fetch("/api/auth/me", { credentials: "include" });
-
-  if (res.ok) {
-    const user = await res.json();
-    setLoggedInUI(user);
-    await fetchTodos();
-  } else {
-    setLoggedOutUI();
-    clearUserState();
-  }
-}
 
 // Fetch todos from backend API
 async function fetchTodos() {
@@ -1006,9 +969,6 @@ document.addEventListener("click", () => {
 loginPopup.addEventListener("click", e => e.stopPropagation());
 userPopup.addEventListener("click", e => e.stopPropagation());
 
-
-
-initApp();
 
 
 
