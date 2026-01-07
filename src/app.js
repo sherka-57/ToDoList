@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 app.use(session({
-  secret: process.env.SESSION_SECRET || "keyboard cat",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false }
@@ -28,6 +28,7 @@ app.delete("/api/todos/:id", todosController.deleteTodo);
 app.put("/api/todos/:id", todosController.updateTodo);
 
 export default app;
+
 
 
 
