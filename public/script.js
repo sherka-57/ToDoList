@@ -172,10 +172,12 @@ loginSubmit.addEventListener("click", async () => {
 
 
 
-// Fetch todos from backend API
 async function fetchTodos() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
+  if (!session) {
+    console.log("No session found. User not logged in.");
+    return;
+  }
 
   const res = await fetch(`${API_BASE_URL}/todos-get`, {
     headers: {
@@ -184,6 +186,8 @@ async function fetchTodos() {
   });
 
   const data = await res.json();
+  console.log("Fetched todos:", data); // <-- ADD THIS
+
   notesState = Array.isArray(data) ? data : [];
   renderNotesFromState();
 }
@@ -934,6 +938,7 @@ userPopup.addEventListener("click", e => e.stopPropagation());
 document.addEventListener('DOMContentLoaded', () => {
   initExistingNotes();
 });
+
 
 
 
