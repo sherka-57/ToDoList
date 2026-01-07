@@ -1,5 +1,5 @@
-import { createTodo as createTodoRepo, getTodosByUser } from "../repositories/todosRepository.js";
-import { createTodo } from "./repositories/todosRepository.js";
+import { createTodo as createTodoRepo, getTodosByUser } from "./repositories/todosRepository.js";
+
 export async function handler(event, context) {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
