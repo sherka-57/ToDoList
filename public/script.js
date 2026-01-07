@@ -53,7 +53,8 @@ let editingNoteCard = null;
 loginPopup.addEventListener("click", e => e.stopPropagation());
 loginPopup.addEventListener("mousedown", e => e.stopPropagation());
 
-const API_BASE_URL = "/.netlify/functions";
+//const API_BASE_URL = "/.netlify/functions";
+const API_BASE_URL = "/api";
 
 
 
@@ -914,3 +915,4 @@ userPopup.addEventListener("click", e => e.stopPropagation());
 document.addEventListener('DOMContentLoaded', () => {
   initExistingNotes();
 });
+
