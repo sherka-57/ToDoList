@@ -38,9 +38,7 @@ const noteCreationSection = document.getElementById("noteCreationSection");
 const allTagsSection = document.getElementById("allTagsSection");
 
 const noteDateInput = document.getElementById("noteDate");
-
-
-import { supabase } from './src/supabaseClient.js';
+const supabase = window.supabase;
 
 
 
@@ -923,6 +921,7 @@ userPopup.addEventListener("click", e => e.stopPropagation());
 document.addEventListener('DOMContentLoaded', () => {
   initExistingNotes();
 });
+
 
 
 
