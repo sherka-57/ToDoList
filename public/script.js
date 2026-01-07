@@ -40,8 +40,9 @@ const allTagsSection = document.getElementById("allTagsSection");
 const noteDateInput = document.getElementById("noteDate");
 
 
+import { supabase } from './supabaseClient.js'; // path relative to script.js
 
-import { supabase } from "./supabaseClientBrowser.js";
+//import { supabase } from "./supabaseClientBrowser.js";
 // active filter tags (multi-select) - notes must contain ALL tags in this set to be shown
 const activeFilterTags = new Set();
 // current search query from navbar search input (used together with tag filters)
@@ -915,5 +916,6 @@ userPopup.addEventListener("click", e => e.stopPropagation());
 document.addEventListener('DOMContentLoaded', () => {
   initExistingNotes();
 });
+
 
 
