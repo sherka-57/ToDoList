@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../supabaseServerClient.js";
 
 export async function getTodosByUser(userId) {
   const { data, error } = await supabase
