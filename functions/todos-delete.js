@@ -1,4 +1,5 @@
 import { deleteTodo as deleteTodoRepo, getTodosByUser } from "../repositories/todosRepository.js";
+import { deleteTodo } from "./repositories/todosRepository.js";
 
 export async function handler(event) {
   if (event.httpMethod !== "DELETE") return { statusCode: 405, body: "Method Not Allowed" };
