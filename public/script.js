@@ -191,33 +191,27 @@ loginSubmit.addEventListener("click", async () => {
 });
 
 
-
 async function fetchTodos() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    console.log("No session found. User not logged in.");
+  if (!session?.user) {
+    console.log("No active session. User not logged in.");
     return;
   }
 
-  const {
-    data: todos,
-    error
-  } = await supabase
+  const { data: todos, error } = await supabase
     .from("Todos")
     .select("*")
-    .eq("user_id", session.user.id);
+    .eq("user_id", session.user.id)
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error("Failed to fetch todos:", error.message);
     return;
   }
 
-  console.log("Fetched todos:", todos); // <-- ADD THIS
-
   notesState = Array.isArray(todos) ? todos : [];
   renderNotesFromState();
 }
-
 
 async function createTodo(todo) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -229,8 +223,8 @@ async function createTodo(todo) {
   const { error } = await supabase
     .from("Todos")
     .insert({
-      ...todo,
-      user_id: session.user.id
+      ...todo,                 // e.g., { title: "Test", content: "..." }
+      user_id: session.user.id  // MUST include user_id for RLS
     });
 
   if (error) {
@@ -241,36 +235,54 @@ async function createTodo(todo) {
   await fetchTodos();
 }
 
+
 async function deleteTodo(id) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
+  if (!session?.user) {
+    console.error("No active session");
+    return;
+  }
 
-  await fetch(`${API_BASE_URL}/todos-delete/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`
-    }
-  });
+  const { error } = await supabase
+    .from("Todos")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", session.user.id); // ensures user can only delete own todos
+
+  if (error) {
+    console.error("Failed to delete todo:", error.message);
+    return;
+  }
 
   await fetchTodos();
 }
 
-async function updateTodo(id, data) {
+
+async function updateTodo(id, updatedFields) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
+  if (!session?.user) {
+    console.error("No active session");
+    return;
+  }
 
-  await fetch(`${API_BASE_URL}/todos-update/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`
-    },
-    body: JSON.stringify(data)
-  });
+  const { error } = await supabase
+    .from("Todos")
+    .update({
+      ...updatedFields,         // e.g., { title: "new title", content: "new content" }
+      updated_at: new Date()    // automatically update timestamp
+    })
+    .eq("id", id)
+    .eq("user_id", session.user.id); // ensures only the owner can update
 
-  exitEditMode();
-  await fetchTodos();
+  if (error) {
+    console.error("Failed to update todo:", error.message);
+    return;
+  }
+
+  exitEditMode();   // keep your UI helper
+  await fetchTodos(); // refresh notes
 }
+
 
 
 
@@ -979,4 +991,5 @@ async function checkSession() {
 }
 
 document.addEventListener("DOMContentLoaded", checkSession);
+
 
