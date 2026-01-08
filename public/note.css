@@ -258,8 +258,8 @@
 }
 
 @keyframes pulse-yellow {
-  0%, 100% { box-shadow: 0 0 8px #ffff66; }
-  50% { box-shadow: 0 0 16px #ffff66; }
+  0%, 100% { box-shadow: 0 0 8px rgb(255, 202, 28); }
+  50% { box-shadow: 0 0 16px rgb(255, 202, 28); }
 }
 
 /* Classes to trigger pulse */
@@ -269,7 +269,7 @@
 }
 
 .pulse-yellow {
-  background-color: #ffff66 !important;
+  background-color: rgb(255, 202, 28) !important;
   animation: pulse-yellow 1s infinite;
 }
 
@@ -281,6 +281,7 @@
   border-radius: 2px;
   padding: 0 2px;
 }
+
 
 
 
