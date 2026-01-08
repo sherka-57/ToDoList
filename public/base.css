@@ -593,13 +593,15 @@ button.danger:hover {
 }
 
 .instructions-box ul li {
-  margin-bottom: 15px;
+    padding: 6px 12px;        /* Add some spacing inside the li */
+    border-radius: 4px;       /* Optional: round corners for nicer look */
+    transition: background-color 0.2s ease, color 0.2s ease; /* smooth hover */
 }
 
 .instructions-box ul li:hover {
-    color: rgba(87, 199, 255, 0.7);
-    transition: color 0.2s ease;
-    cursor:pointer
+    background-color: rgba(87, 199, 255, 0.2); /* light blue background */
+    color: rgba(87, 199, 255, 0.9);           /* slightly brighter text */
+    cursor: pointer;                           /* shows it’s interactive */
 }
 
 
