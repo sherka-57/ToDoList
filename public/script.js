@@ -350,48 +350,6 @@ function getDueDateGradient(dueDateStr) {
            ${blueColor} 100%)`;
 }
 
-function applyDueDateStyling(noteCard, dueDateStr) {
-  const footer = noteCard.querySelector(".note-footer");
-  const header = noteCard.querySelector(".note-header");
-
-  // Remove any previous pulse classes
-  footer.classList.remove("note-pulse-red", "note-pulse-yellow");
-  header.classList.remove("note-pulse-red", "note-pulse-yellow");
-
-  if (!dueDateStr) {
-    // No due date → regular color
-    if (footer) footer.style.background = "#333"; // or your normal footer color
-    if (header) header.style.background = "#222"; // or normal header color
-    return;
-  }
-
-  const today = new Date();
-  const dueDate = new Date(dueDateStr);
-  // clear time for accurate day comparison
-  today.setHours(0,0,0,0);
-  dueDate.setHours(0,0,0,0);
-
-  const diffTime = dueDate - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    // Overdue → red pulse
-    if (footer) footer.classList.add("note-pulse-red");
-    if (header) header.classList.add("note-pulse-red");
-  } else if (diffDays === 0) {
-    // Due today → yellow pulse
-    if (footer) footer.classList.add("note-pulse-yellow");
-    if (header) header.classList.add("note-pulse-yellow");
-  } else {
-    // Future → normal gradient
-    if (footer) footer.style.background = getDueDateGradient(dueDateStr);
-    if (header) header.style.background = "#222"; // normal header
-  }
-}
-
-
-
-
 
 function updateNotesVisibility() {
   const notes = Array.from(document.querySelectorAll('.note'));
@@ -610,8 +568,6 @@ instructionsOverlay.addEventListener("click", () => {
 document.getElementById("instructionsModal")
   .addEventListener("click", e => e.stopPropagation());
 
-
-
 // === [Factory] Build a note card from saved data (structure preserved) ===
 function createNoteCardFromData(noteObj) {
 
@@ -670,9 +626,7 @@ function createNoteCardFromData(noteObj) {
   </div>
 `;
 
-// Apply pulsing header/footer based on due date
-  applyDueDateStyling(card, dueDate);
-  
+
   // Insert the new card into the DOM first so tag counting sees it
   if (noteGrid) noteGrid.append(card);
 
@@ -735,6 +689,27 @@ function createNoteCardFromData(noteObj) {
     if (noteTagContainer.scrollWidth > noteTagContainer.clientWidth + 1) noteTagContainer.classList.add('show-scroll'); else noteTagContainer.classList.remove('show-scroll');
   }
 
+  const footer = card.querySelector(".note-footer");
+  if (footer && noteObj.due_date) {
+  footer.style.background = getDueDateGradient(noteObj.due_date);
+
+  const today = new Date();
+  const dueDate = new Date(noteObj.due_date);
+  const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+  const header = card.querySelector('.note-header');
+
+  // Pulse if overdue or due today
+  if (diffDays <= 0) {
+    footer.classList.add('pulse');  // footer red pulse
+    if (header) header.classList.add('pulse'); // header pulse too
+  } else {
+    footer.classList.remove('pulse');
+    if (header) header.classList.remove('pulse');
+  }
+
+    
+}
 
 
   // Respect any active filters after render
@@ -754,7 +729,6 @@ function createNoteCardFromData(noteObj) {
 
   return card;
 }
-
 function enterEditMode(note, card) {
   // Exit previous edit
   if (editingNoteCard) {
@@ -1139,6 +1113,7 @@ document.addEventListener("click", () => {
 window.addEventListener('beforeunload', async () => {
   await supabase.auth.signOut();
 });
+
 
 
 
