@@ -311,7 +311,7 @@ function getDueDateGradient(dueDateStr) {
   else redPercent = (10 - diffDays) * 10;  // 1 day → 90%, 2 days → 80%
 
   // Colors
-  const redColor = 'rgba(255, 0, 0, 0.8)';
+  const redColor = '#ff5555';
   const blueColor = '#57c7ff';
 
   // Add a tiny transition/fade at the edge (1% of the width)
@@ -1041,6 +1041,7 @@ document.addEventListener("click", () => {
 window.addEventListener('beforeunload', async () => {
   await supabase.auth.signOut();
 });
+
 
 
 
