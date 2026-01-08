@@ -103,7 +103,7 @@
     <div class="note-grid"></div>
 </div>
 
-<!-- Only this, before your script.js -->
+<!-- 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 <script>
   window.supabase = supabase.createClient(
@@ -112,12 +112,18 @@
   );
 </script>
 
-<!-- Then your main script -->
+
+<script type="module" src="/script.js"></script>-->
+    
+<!-- index.html inside /public -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+<script type="module" src="/supabaseclientbrowser.js"></script>
 <script type="module" src="/script.js"></script>
 
 
 </body>
 </html>
+
 
 
 
