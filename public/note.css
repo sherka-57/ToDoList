@@ -258,9 +258,19 @@
   100% { box-shadow: 0 0 4px 0 rgba(255, 85, 85, 0.4); }
 }
 
+/* Footer pulse */
 .note-footer.pulse {
   animation: pulse-red 1s infinite;
 }
+
+/* Header pulse (entire header including title + buttons) */
+.note-header.pulse {
+  background-color: #ff5555;       /* red background for urgent header */
+  color: #fff;                     /* text/icons white for contrast */
+  animation: pulse-red 1s infinite;
+}
+
+
 
 
 
