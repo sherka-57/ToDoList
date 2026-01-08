@@ -947,56 +947,51 @@ function initExistingNotes() {
   }
 }
 
-
-
+// =======================
+// Page Initialization
+// =======================
 document.addEventListener('DOMContentLoaded', async () => {
+  // 1️⃣ Check auth and update UI
   await checkAuthAndUpdateUI();
 
-  const search = document.getElementById('navSearch');
-  if (search) {
-    search.addEventListener('input', (e) => {
+  // 2️⃣ Initialize search input
+  const searchInput = document.querySelector("#navSearch");
+  if (searchInput) {
+    // Start with empty search
+    searchInput.value = "";
+    currentSearchQuery = "";
+
+    // Update filter as user types
+    searchInput.addEventListener('input', (e) => {
       currentSearchQuery = e.target.value || '';
       updateNotesVisibility();
     });
 
-    search.addEventListener('keydown', (e) => {
+    // Clear search on Escape key
+    searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        search.value = '';
+        searchInput.value = '';
         currentSearchQuery = '';
         updateNotesVisibility();
       }
     });
   }
+
+  // 3️⃣ Initialize existing notes on page
+  initExistingNotes();
 });
 
 
+// Click outside to hide popups
 document.addEventListener("click", () => {
   loginPopup.classList.add("hidden");
   userPopup.classList.add("hidden");
 });
 
-
-loginPopup.addEventListener("click", e => e.stopPropagation());
-userPopup.addEventListener("click", e => e.stopPropagation());
-document.addEventListener('DOMContentLoaded', () => {
-  initExistingNotes();
-});
-
-// 7️⃣ On page load, check session
-async function checkSession() {
-  const { data } = await supabase.auth.getSession();
-  if (data.session) {
-    showUser(data.session.user);
+// Click inside popups should not close them
+[loginPopup, userPopup].forEach(popup => {
+  if (popup) {
+    popup.addEventListener("click", (e) => e.stopPropagation());
   }
-}
-
-document.addEventListener("DOMContentLoaded", checkSession);
-document.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.querySelector("#navSearch"); // adjust selector
-  if (searchInput) searchInput.value = ""; // empty it on page load
 });
-
-
-
-
 
