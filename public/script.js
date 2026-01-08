@@ -301,6 +301,22 @@ loginPopup.addEventListener("click", (e) => {
   e.stopPropagation();
 });
 
+function highlightText(element, query) {
+  if (!element) return;
+  const text = element.textContent;
+  if (!query) {
+    element.innerHTML = text; // reset if no query
+    return;
+  }
+
+  // Escape special characters in query for regex
+  const escapedQuery = query.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const regex = new RegExp(`(${escapedQuery})`, 'gi');
+
+  // Wrap matches in a span with highlight class
+  element.innerHTML = text.replace(regex, '<span class="highlight">$1</span>');
+}
+
 // Returns a semi-transparent gradient for due date urgency
 function getDueDateGradient(dueDateStr) {
   if (!dueDateStr) return ''; // no due date
@@ -358,6 +374,28 @@ function updateNotesVisibility() {
     }
 
     card.style.display = (tagsMatch && searchMatch) ? '' : 'none';
+
+    // ---- HIGHLIGHTING ----
+  const titleEl = card.querySelector('.note-title');
+  const excerptEl = card.querySelector('.note-excerpt p');
+  const tagEls = Array.from(card.querySelectorAll('.note-tags span'));
+
+  // Highlight title and excerpt
+  highlightText(titleEl, query);
+  highlightText(excerptEl, query);
+
+  // Highlight tags if they match
+  tagEls.forEach(tag => {
+    if (query && tag.dataset.tag.toLowerCase().includes(query)) {
+      tag.classList.add('highlight');
+    } else {
+      tag.classList.remove('highlight');
+    }
+  });
+
+
+
+    
   });
 }
 
@@ -1081,6 +1119,7 @@ document.addEventListener("click", () => {
 window.addEventListener('beforeunload', async () => {
   await supabase.auth.signOut();
 });
+
 
 
 
