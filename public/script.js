@@ -140,11 +140,12 @@ registerSubmit.addEventListener("click", async () => {
 
   try {
     const { data, error } = await supabase.auth.signUp({
-      email,
-      password
+      email: email.trim(),
+      password: password
     });
 
     if (error) {
+      console.error(error.message);
       alert("Registration failed: " + error.message);
       return;
     }
@@ -170,11 +171,12 @@ loginSubmit.addEventListener("click", async () => {
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
+      email: email.trim(),
+      password: password
     });
 
     if (error) {
+      console.error(error.message);
       alert("Login failed: " + error.message);
       return;
     }
@@ -966,6 +968,7 @@ async function checkSession() {
 }
 
 document.addEventListener("DOMContentLoaded", checkSession);
+
 
 
 
