@@ -995,3 +995,9 @@ document.addEventListener("click", () => {
   }
 });
 
+// Optional: ensure user is signed out when closing tab/window
+window.addEventListener('beforeunload', async () => {
+  await supabase.auth.signOut();
+});
+
+
