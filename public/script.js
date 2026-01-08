@@ -1,3 +1,4 @@
+import { supabase } from "./supabaseClientBrowser.js";
 // ==========================
 //  SCRIPT.JS - FULL VERSION
 // ==========================
@@ -965,6 +966,7 @@ async function checkSession() {
 }
 
 document.addEventListener("DOMContentLoaded", checkSession);
+
 
 
 
