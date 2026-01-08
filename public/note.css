@@ -246,9 +246,9 @@
 /* When editing */
 .note.editing {
   transform: scale(1.05);
-  outline: 3px solid #bfefff; /* light blue outline */
   box-shadow: 0px 0px 20px rgba(87, 199, 255, 0.7); /* light blue glow */
 }
+
 
 
 
