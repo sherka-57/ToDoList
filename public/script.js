@@ -694,10 +694,10 @@ function createNoteCardFromData(noteObj) {
     if (noteTagContainer.scrollWidth > noteTagContainer.clientWidth + 1) noteTagContainer.classList.add('show-scroll'); else noteTagContainer.classList.remove('show-scroll');
   }
 
-  const footer = card.querySelector(".note-footer");
+const footer = card.querySelector(".note-footer");
 const header = card.querySelector(".note-header");
 
-if (footer && noteObj.due_date) {
+if (footer && noteObj.due_date && header) {
   const today = new Date();
   const dueDate = new Date(noteObj.due_date);
   const diffDays = Math.floor((dueDate - today) / (1000*60*60*24));
@@ -715,13 +715,15 @@ if (footer && noteObj.due_date) {
     footer.classList.add("pulse-yellow");
     header.classList.add("pulse-yellow");
   } else {
-    // Future → gradient background
+    // Future → normal gradient
     footer.style.background = getDueDateGradient(noteObj.due_date);
     footer.style.color = '#fff';
+    header.style.background = ''; // remove pulse effect if any
   }
 
   footer.style.padding = '4px 8px';
 }
+
 
 
     
@@ -1130,6 +1132,7 @@ document.addEventListener("click", () => {
 window.addEventListener('beforeunload', async () => {
   await supabase.auth.signOut();
 });
+
 
 
 
