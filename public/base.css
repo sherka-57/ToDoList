@@ -596,6 +596,11 @@ button.danger:hover {
   margin-bottom: 15px;
 }
 
+.instructions-box ul li:hover {
+    color: rgba(87, 199, 255, 0.7);
+}
+
+
 
 
 
