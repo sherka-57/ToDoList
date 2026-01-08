@@ -221,14 +221,16 @@
   scrollbar-width: thin; /* Firefox */
 }
 
+
 .note-tags span {
   background: #6a11cb;
   color: white;
-  padding: 4px 8px;
+  padding: 6px 8px 10px 8px; /* top right bottom left */
   border-radius: 6px;
   font-size: 12px;
-  margin-bottom: -8px;
+  margin-bottom: 0; /* remove negative margin */
 }
+
 
 .note-footer {
   display: flex;
@@ -248,6 +250,7 @@
   transform: scale(1.05);
   box-shadow: 0px 0px 20px rgba(87, 199, 255, 0.7); /* light blue glow */
 }
+
 
 
 
