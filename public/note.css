@@ -243,10 +243,11 @@
 
 .note.editing {
    outline: 3px solid #bfefff; /* light blue outline */
-  box-shadow: 0 0 20px rgba(87, 199, 255, 0.7); /* light blue glow */
+  box-shadow: 5px 5px 25px rgba(87, 199, 255, 0.7); /* light blue glow */
 }
 
 .note.editing .note-card {
   transform: scale(1.03);
 }
+
 
