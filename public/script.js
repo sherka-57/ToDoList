@@ -695,23 +695,34 @@ function createNoteCardFromData(noteObj) {
   }
 
   const footer = card.querySelector(".note-footer");
-  if (footer && noteObj.due_date) {
-  footer.style.background = getDueDateGradient(noteObj.due_date);
+const header = card.querySelector(".note-header");
 
+if (footer && noteObj.due_date) {
   const today = new Date();
   const dueDate = new Date(noteObj.due_date);
-  const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor((dueDate - today) / (1000*60*60*24));
 
-  const header = card.querySelector('.note-header');
+  // Remove any previous pulse classes
+  footer.classList.remove("pulse-red", "pulse-yellow");
+  header.classList.remove("pulse-red", "pulse-yellow");
 
-  // Pulse if overdue or due today
-  if (diffDays <= 0) {
-    footer.classList.add('pulse');  // footer red pulse
-    if (header) header.classList.add('pulse'); // header pulse too
+  if (diffDays < 0) {
+    // Overdue → red pulse
+    footer.classList.add("pulse-red");
+    header.classList.add("pulse-red");
+  } else if (diffDays === 0) {
+    // Due today → yellow pulse
+    footer.classList.add("pulse-yellow");
+    header.classList.add("pulse-yellow");
   } else {
-    footer.classList.remove('pulse');
-    if (header) header.classList.remove('pulse');
+    // Future → gradient background
+    footer.style.background = getDueDateGradient(noteObj.due_date);
+    footer.style.color = '#fff';
   }
+
+  footer.style.padding = '4px 8px';
+}
+
 
     
 }
@@ -1119,6 +1130,7 @@ document.addEventListener("click", () => {
 window.addEventListener('beforeunload', async () => {
   await supabase.auth.signOut();
 });
+
 
 
 
